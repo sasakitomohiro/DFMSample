@@ -6,6 +6,7 @@ import android.os.Bundle
 import androidx.databinding.DataBindingUtil
 import com.github.sasakitomohiro.dfmsample.databinding.ActivityMainBinding
 import com.google.android.play.core.splitinstall.SplitInstallManagerFactory
+import com.google.android.play.core.splitinstall.SplitInstallRequest
 import com.google.android.play.core.splitinstall.SplitInstallStateUpdatedListener
 import com.google.android.play.core.splitinstall.model.SplitInstallSessionStatus
 
@@ -40,6 +41,9 @@ internal class MainActivity : AppCompatActivity() {
                 // do something
             }
             SplitInstallSessionStatus.INSTALLED -> {
+                startDFMActivity()
+            }
+            else -> {
                 // do something
             }
         }
@@ -51,11 +55,15 @@ internal class MainActivity : AppCompatActivity() {
         splitInstallManager.registerListener(listener)
 
         binding.button.setOnClickListener {
-            val intent = Intent(Intent.ACTION_VIEW).setClassName(
-                this,
-                "com.github.sasakitomohiro.dynamicfeature.DFMActivity"
-            )
-            startActivity(intent)
+            val moduleName = "dynamicfeature"
+            if (splitInstallManager.installedModules.contains(moduleName)) {
+                val request = SplitInstallRequest.newBuilder()
+                    .addModule(moduleName)
+                    .build()
+                splitInstallManager.startInstall(request)
+            } else {
+                startDFMActivity()
+            }
         }
     }
 
@@ -70,5 +78,13 @@ internal class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         splitInstallManager.unregisterListener(listener)
         super.onDestroy()
+    }
+
+    private fun startDFMActivity() {
+        val intent = Intent(Intent.ACTION_VIEW).setClassName(
+            this,
+            "com.github.sasakitomohiro.dynamicfeature.DFMActivity"
+        )
+        startActivity(intent)
     }
 }
